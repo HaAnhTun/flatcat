@@ -40,8 +40,7 @@ footer {
 
 /* Điều chỉnh #fullData */
 #fullData {
-  margin-left: 20px;
-  padding-left: 1px;
+  padding-left: 20px;
   padding-right: 25px;
   min-width: 400px;
   max-width: 100%; /* Đảm bảo fullData không quá rộng */
