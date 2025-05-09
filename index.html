@@ -1,50 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>FlatCat - Vũ's flash card app</title>
+  <title>FlatCat - Vũ's Flash Card App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="main.css">
   <link rel="icon" href="flatcat.png" type="image/png">
 </head>
+
 <body>
 
-<div id="card">
-  <div id="hintDisplay" class="spelling_hint"></div>
-  <div class="definition" id="defDisplay"></div>
-  <img id="cardImage" src="" alt="Image">
-  <input type="text" id="hintInput" placeholder="Type the word and press Enter...">
-</div>
+  <header>
+    <h1>FlatCat Flash Card</h1>
+    <p>Practice your vocabulary</p>
+  </header>
 
-<div class="full-data hidden" id="fullData">
-  <h2 id="word"></h2>
-  <div class="phonetic" id="phonetic"></div>
-  <div class="translation" id="translation"></div>
-  <div id="fullDefinition"></div>
-  <div class="audio">
-    <label for="audioWord">Audio (Word)</label>
-    <audio id="audioWord" controls>
-      <source id="audioWordSource" src="" type="audio/mp3">
-      Your browser does not support the audio element.
-    </audio>
+  <!-- Main content -->
+  <main style="padding: 30px 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;">
+    <div id="card">
+      <div id="hintDisplay" class="spelling_hint"></div>
+      <div class="definition" id="defDisplay"></div>
+      <img id="cardImage" src="" alt="Image">
+      <input type="text" id="hintInput" placeholder="Type the word and press Enter...">
+    </div>
 
-    <label for="audioMeaning">Audio (Meaning)</label>
-    <audio id="audioMeaning" controls>
-      <source id="audioMeaningSource" src="" type="audio/mp3">
-      Your browser does not support the audio element.
-    </audio>
+    <div class="full-data hidden" id="fullData">
+      <h2 id="word"></h2>
+      <div class="phonetic" id="phonetic"></div>
+      <div class="translation" id="translation"></div>
+      <div id="fullDefinition"></div>
+      <div class="audio">
+        <label for="audioWord">Audio (Word)</label>
+        <audio id="audioWord" controls>
+          <source id="audioWordSource" src="" type="audio/mp3">
+          Your browser does not support the audio element.
+        </audio>
 
-    <label for="audioExample">Audio (Example)</label>
-    <audio id="audioExample" controls>
-      <source id="audioExampleSource" src="" type="audio/mp3">
-      Your browser does not support the audio element.
-    </audio>
-  </div>
-</div>
+        <label for="audioMeaning">Audio (Meaning)</label>
+        <audio id="audioMeaning" controls>
+          <source id="audioMeaningSource" src="" type="audio/mp3">
+          Your browser does not support the audio element.
+        </audio>
 
-<!-- Giữ nguyên toàn bộ phần <head> và CSS -->
+        <label for="audioExample">Audio (Example)</label>
+        <audio id="audioExample" controls>
+          <source id="audioExampleSource" src="" type="audio/mp3">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 <strong>FlatCat</strong> by Vũ. All rights reserved.</p>
+    <p>Inspired by <strong>Anki</strong></p>
+  </footer>
 
   <script src="main.js"></script>
-  
+
 </body>
+
 </html>

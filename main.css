@@ -2,14 +2,21 @@
 body {
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
-  padding: 30px;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Canh phần tử ở đầu trang */
-  height: auto;
-  min-height: 100vh; /* Đảm bảo chiều cao tối thiểu là 100% chiều cao viewport */
-  overflow: auto; /* Cho phép cuộn trang nếu nội dung vượt quá */
+
+}
+header {
+  background-color: #007BFF;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+footer {
+  background-color: #f1f1f1;
+  text-align: center;
+  padding: 15px 30px;
+  color: #666;
+  font-size: 14px;
 }
 
 .container {
@@ -34,7 +41,7 @@ body {
 /* Điều chỉnh #fullData */
 #fullData {
   margin-left: 20px;
-  padding-left: 20px;
+  padding-left: 1px;
   padding-right: 25px;
   min-width: 400px;
   max-width: 100%; /* Đảm bảo fullData không quá rộng */
@@ -104,3 +111,4 @@ input:focus {
   width: 100%;
   margin-top: 5px;
 }
+

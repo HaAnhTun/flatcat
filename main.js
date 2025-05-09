@@ -125,14 +125,3 @@ document.addEventListener("DOMContentLoaded", () => {
     loadData();
 });
 
-// Khi người dùng nhấn vào một nút (hoặc một sự kiện nào đó), chuyển sang chế độ review
-function enableReviewMode() {
-  document.querySelector('#fullData').classList.remove('d-none'); // Hiển thị fullData
-  document.querySelector('#card').classList.add('d-none'); // Ẩn card
-}
-
-// Khi người dùng muốn thoát chế độ review, chuyển lại trạng thái ban đầu
-function disableReviewMode() {
-  document.querySelector('#fullData').classList.add('d-none'); // Ẩn fullData
-  document.querySelector('#card').classList.remove('d-none'); // Hiển thị lại card
-}
