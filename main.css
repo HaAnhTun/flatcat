@@ -1,0 +1,110 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    padding: 30px;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  #card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 400px;
+    max-width: 100%;
+    transition: all 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .definition,
+  .full-data {
+    margin-top: 20px;
+  }
+  
+  img {
+    max-height: 150px;
+    margin-top: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  input {
+    padding: 10px;
+    width: 100%;
+    font-size: 16px;
+    margin-top: 20px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+  
+  input:focus {
+    border-color: #007BFF;
+  }
+  
+  .phonetic,
+  .translation {
+    font-style: italic;
+    color: #777;
+  }
+  
+  .definition {
+    color: #333;
+    font-weight: bold;
+  }
+  
+  #hintDisplay {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007BFF;
+    margin-bottom: 10px;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .full-data h2 {
+    color: #333;
+  }
+  
+  .full-data {
+    background-color: #f1f1f1;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
+  .audio label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #007BFF;
+  }
+  
+  .audio audio {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  body {
+    transition: opacity 0.1s ease;
+  }

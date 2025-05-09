@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcard Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<div id="card">
+  <div id="hintDisplay" class="spelling_hint"></div>
+  <div class="definition" id="defDisplay"></div>
+  <img id="cardImage" src="" alt="Image">
+  <input type="text" id="hintInput" placeholder="Type the word and press Enter...">
+</div>
+
+<div class="full-data hidden" id="fullData">
+  <h2 id="word"></h2>
+  <div class="phonetic" id="phonetic"></div>
+  <div class="translation" id="translation"></div>
+  <div id="fullDefinition"></div>
+  <div class="audio">
+    <label for="audioWord">Audio (Word)</label>
+    <audio id="audioWord" controls>
+      <source id="audioWordSource" src="" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+
+    <label for="audioMeaning">Audio (Meaning)</label>
+    <audio id="audioMeaning" controls>
+      <source id="audioMeaningSource" src="" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+
+    <label for="audioExample">Audio (Example)</label>
+    <audio id="audioExample" controls>
+      <source id="audioExampleSource" src="" type="audio/mp3">
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+</div>
+
+<!-- Giữ nguyên toàn bộ phần <head> và CSS -->
+
+  <script src="main.js"></script>
+  
+</body>
+</html>
