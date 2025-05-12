@@ -247,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.log("Nhập đúng từ hoặc để trống:", userInput);
                 }
                 reveal = true;
+
                 revealCard();
             } else {
                 handleNext();
@@ -259,9 +260,7 @@ document.addEventListener("keydown", (e) => {
     const isInputFocused = document.activeElement === hintInput;
     if (e.key === "Enter") {
         e.preventDefault();
-        if (isInputFocused) {
-            handleNext();
-        } else {
+        if (!isInputFocused) {
             hintInput.focus();
         }
     } else if (!isInputFocused) {
