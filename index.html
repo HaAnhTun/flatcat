@@ -19,10 +19,16 @@
   <!-- Main content -->
   <main style="padding: 30px 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;">
     <div id="card">
+      <div id="progress">Card <span id="currentCard">1</span>/<span id="totalCards">0</span></div>
       <div id="hintDisplay" class="spelling_hint"></div>
       <div class="definition" id="defDisplay"></div>
       <img id="cardImage" src="" alt="Image">
       <input type="text" id="hintInput" placeholder="Type the word and press Enter...">
+      <div class="button-group">
+        <button onclick="handleReveal()">Reveal</button>
+        <button onclick="handleNext()">Next</button>
+        <button onclick="handleBack()">Back</button>
+      </div>
     </div>
 
     <div class="full-data hidden" id="fullData">

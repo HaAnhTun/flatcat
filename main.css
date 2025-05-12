@@ -1,10 +1,9 @@
-
 /* Đảm bảo trang có thể cuộn nếu nội dung dài */
 body {
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
-  margin: 0; /* Loại bỏ margin mặc định */
-  min-height: 100vh; /* Đảm bảo body chiếm toàn bộ chiều cao */
+  margin: 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -12,55 +11,55 @@ body {
 header {
   background-color: #007BFF;
   color: white;
-  padding: 15px; /* Giảm padding trên mobile */
+  padding: 15px;
   text-align: center;
 }
 
 footer {
   background-color: #f1f1f1;
   text-align: center;
-  padding: 10px 20px; /* Giảm padding trên mobile */
+  padding: 10px 20px;
   color: #666;
   font-size: 14px;
-  margin-top: auto; /* Đẩy footer xuống cuối trang */
+  margin-top: auto;
 }
 
 .container {
   display: flex;
-  gap: 15px; /* Giảm gap trên mobile */
-  margin: 15px; /* Giảm margin trên mobile */
+  gap: 15px;
+  margin: 15px;
   width: 100%;
   flex-wrap: wrap;
-  flex-grow: 1; /* Đảm bảo container chiếm không gian còn lại */
+  flex-grow: 1;
 }
 
 /* Điều chỉnh #card */
 #card {
   background-color: #ffffff;
-  padding: 15px; /* Giảm padding trên mobile */
+  padding: 15px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  width: 100%; /* Chiếm toàn bộ chiều rộng trên mobile */
-  max-width: 400px; /* Giới hạn chiều rộng tối đa */
+  width: 100%;
+  max-width: 400px;
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
 #card:hover {
-  transform: scale(1.02); /* Hiệu ứng phóng to nhẹ khi hover */
+  transform: scale(1.02);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Điều chỉnh #fullData */
 #fullData {
-  padding: 15px; /* Giảm padding trên mobile */
-  min-width: 0; /* Loại bỏ min-width để phù hợp với mobile */
+  padding: 15px;
+  min-width: 0;
   max-width: 100%;
   overflow-y: auto;
   background-color: #f9f9f9;
   border-radius: 8px;
   border: 1px solid #ddd;
-  width: 100%; /* Chiếm toàn bộ chiều rộng trên mobile */
+  width: 100%;
   max-width: 400px;
 }
 
@@ -69,22 +68,62 @@ footer {
   display: none;
 }
 
+/* Hiển thị tiến trình */
+#progress {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* Kiểu dáng cho nút bấm */
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  background-color: #004085;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 /* Cải thiện giao diện các phần tử khác */
 img {
-  max-height: 120px; /* Giảm chiều cao hình ảnh trên mobile */
+  max-height: 120px;
   width: auto;
-  margin: 15px auto; /* Giảm margin và căn giữa */
+  margin: 15px auto;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: block;
 }
 
 input {
-  padding: 12px; /* Tăng padding để dễ chạm */
-  width: 100%; /* Chiếm toàn bộ chiều rộng */
-  box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
+  padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
   font-size: 16px;
-  margin: 20px 0 !important; /* Sửa lỗi cú pháp và giảm margin */
+  margin: 20px 0 !important;
   border: 2px solid #ccc;
   border-radius: 5px;
   outline: none;
@@ -107,7 +146,7 @@ input:focus {
 }
 
 #hintDisplay {
-  font-size: 20px; /* Giảm font-size trên mobile */
+  font-size: 20px;
   font-weight: bold;
   color: #007BFF;
   margin-bottom: 10px;
@@ -141,26 +180,26 @@ input.error {
 /* Media queries cho thiết bị di động */
 @media (max-width: 768px) {
   main {
-    padding: 15px 10px; /* Giảm padding của main */
-    gap: 20px; /* Giảm gap giữa các phần tử */
+    padding: 15px 10px;
+    gap: 20px;
   }
 
   .container {
-    flex-direction: column; /* Chuyển sang bố cục cột */
-    align-items: center; /* Căn giữa các phần tử */
+    flex-direction: column;
+    align-items: center;
     margin: 10px;
     gap: 10px;
   }
 
   #card,
   #fullData {
-    max-width: 100%; /* Chiếm toàn bộ chiều rộng */
+    max-width: 100%;
     padding: 10px;
   }
 
   #card:hover {
-    transform: none; /* Tắt hiệu ứng hover trên mobile */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Giữ shadow mặc định */
+    transform: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 
   header {
@@ -168,11 +207,11 @@ input.error {
   }
 
   header h1 {
-    font-size: 1.5em; /* Giảm kích thước tiêu đề */
+    font-size: 1.5em;
   }
 
   header p {
-    font-size: 0.9em; /* Giảm kích thước mô tả */
+    font-size: 0.9em;
   }
 
   footer {
@@ -181,26 +220,40 @@ input.error {
   }
 
   img {
-    max-height: 100px; /* Giảm kích thước hình ảnh */
+    max-height: 100px;
   }
 
   input {
-    font-size: 14px; /* Giảm font-size cho input */
+    font-size: 14px;
     padding: 10px;
   }
 
   #hintDisplay {
-    font-size: 18px; /* Giảm font-size cho gợi ý */
+    font-size: 18px;
   }
 
   .audio audio {
-    max-width: 100%; /* Đảm bảo audio controls vừa với màn hình */
+    max-width: 100%;
+  }
+
+  .button-group {
+    flex-wrap: wrap; /* Cho phép nút xuống dòng nếu không đủ chỗ */
+    gap: 8px;
+  }
+
+  button {
+    padding: 8px 15px;
+    font-size: 14px;
+  }
+
+  #progress {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
   header h1 {
-    font-size: 1.2em; /* Giảm thêm kích thước tiêu đề */
+    font-size: 1.2em;
   }
 
   header p {
@@ -218,10 +271,15 @@ input.error {
   }
 
   img {
-    max-height: 80px; /* Giảm kích thước hình ảnh cho màn hình rất nhỏ */
+    max-height: 80px;
   }
 
   #hintDisplay {
     font-size: 16px;
+  }
+
+  button {
+    padding: 7px 12px;
+    font-size: 13px;
   }
 }
