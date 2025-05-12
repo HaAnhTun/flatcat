@@ -5,15 +5,18 @@ let data = [];
 let reveal = false;
 let learnedIndices = new Set();
 let currentIndex = null;
-let isTransitioning = false;
 
 async function loadData() {
     try {
         const res = await fetch("output_deck.json");
         data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("Dữ liệu JSON không hợp lệ hoặc rỗng");
+        }
         showCard();
     } catch (e) {
-        document.body.innerHTML = "❌ Không thể tải file JSON.";
+        console.error(e);
+        document.body.innerHTML = "❌ Không thể tải file JSON. Vui lòng kiểm tra dữ liệu.";
     }
 }
 
@@ -35,12 +38,18 @@ function getRandomUnseenIndex() {
     return index;
 }
 
-function preloadImage(url) {
-    return new Promise((resolve) => {
+async function preloadImage(url) {
+    try {
         const img = new Image();
         img.src = url;
-        img.onload = resolve;
-    });
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error("Không thể tải hình ảnh"));
+        });
+    } catch (e) {
+        console.error(e);
+        document.getElementById("cardImage").alt = "Hình ảnh không khả dụng";
+    }
 }
 
 async function showCard() {
@@ -50,9 +59,11 @@ async function showCard() {
     const card = data[currentIndex];
     const imgUrl = supabaseMediaURL(card.image);
 
-    // 👉 Áp dụng fade-out lên body
-    document.body.classList.remove("fade-in");
-    document.body.classList.add("fade-out");
+    // Fade out
+    const cardElement = document.getElementById("card");
+    const fullDataElement = document.getElementById("fullData");
+    cardElement.style.opacity = "0";
+    fullDataElement.style.opacity = "0";
 
     // Cập nhật nội dung
     document.getElementById("hintDisplay").innerHTML = card.spelling_hint;
@@ -71,12 +82,10 @@ async function showCard() {
     await preloadImage(imgUrl);
     document.getElementById("cardImage").src = imgUrl;
 
-    // 👉 Xóa fade-out, thêm fade-in
-    document.body.classList.remove("fade-out");
-    void document.body.offsetWidth; // reflow để reset animation
-    document.body.classList.add("fade-in");
+    // Fade in
+    cardElement.style.opacity = "1";
+    fullDataElement.style.opacity = "1";
 }
-
 
 function revealCard() {
     const card = data[currentIndex];
@@ -96,32 +105,55 @@ document.addEventListener("DOMContentLoaded", () => {
     // Xử lý Enter trong ô nhập: Reveal / Next
     hintInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
+            const userInput = hintInput.value.trim().toLowerCase();
+            const correctWord = data[currentIndex].word.toLowerCase();
             if (!reveal) {
-                reveal = true;
-                revealCard();
+                if (userInput === correctWord) {
+                    reveal = true;
+                    revealCard();
+                } else {
+                    hintInput.classList.add("error");
+                    setTimeout(() => hintInput.classList.remove("error"), 500);
+                }
             } else {
-                // Fade out toàn bộ body
-                document.body.style.opacity = "0";
-
-                // Sau khi hiệu ứng fade out kết thúc (~300ms), load card mới
+                // Chuyển card
+                document.getElementById("card").style.opacity = "0";
                 setTimeout(() => {
                     showCard().then(() => {
-                        // Fade in trở lại sau khi card mới đã sẵn sàng
-                        document.body.style.opacity = "1";
+                        document.getElementById("card").style.opacity = "1";
                     });
-                }, 100);
+                }, 300);
             }
         }
     });
 
-    // Global Enter: nếu chưa focus vào ô nhập thì focus vào
+    // Global Enter/Space: nếu chưa focus vào ô nhập thì xử lý
     document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && document.activeElement !== hintInput) {
-            e.preventDefault(); // tránh scroll hoặc reload form
-            hintInput.focus();
+        if (document.activeElement !== hintInput) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (reveal) {
+                    // Chuyển card
+                    document.getElementById("card").style.opacity = "0";
+                    setTimeout(() => {
+                        showCard().then(() => {
+                            document.getElementById("card").style.opacity = "1";
+                        });
+                    }, 300);
+                }
+                // Chỉ focus trên desktop, tránh trên mobile
+                if (!/Mobi|Android/i.test(navigator.userAgent)) {
+                    hintInput.focus();
+                }
+            } else if (e.key === " ") {
+                e.preventDefault();
+                if (!reveal) {
+                    reveal = true;
+                    revealCard();
+                }
+            }
         }
     });
 
     loadData();
 });
-
