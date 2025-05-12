@@ -1,54 +1,73 @@
 const SUPABASE_URL = "https://ctriaqbaxxqrsmovzoqs.supabase.co";
 const SUPABASE_BUCKET = "media";
 
+// Cache DOM elements
+const DOM = {
+    card: document.getElementById("card"),
+    fullData: document.getElementById("fullData"),
+    hintInput: document.getElementById("hintInput"),
+    hintDisplay: document.getElementById("hintDisplay"),
+    defDisplay: document.getElementById("defDisplay"),
+    word: document.getElementById("word"),
+    phonetic: document.getElementById("phonetic"),
+    translation: document.getElementById("translation"),
+    fullDefinition: document.getElementById("fullDefinition"),
+    cardImage: document.getElementById("cardImage"),
+    audioWord: document.getElementById("audioWord"),
+    audioMeaning: document.getElementById("audioMeaning"),
+    audioExample: document.getElementById("audioExample"),
+    audioWordSource: document.getElementById("audioWordSource"),
+    audioMeaningSource: document.getElementById("audioMeaningSource"),
+    audioExampleSource: document.getElementById("audioExampleSource"),
+    currentCard: document.getElementById("currentCard"),
+    totalCards: document.getElementById("totalCards"),
+    backButton: document.querySelector('button[onclick="handleBack()"]')
+};
+
 let data = [];
 let reveal = false;
 let learnedIndicesList = JSON.parse(sessionStorage.getItem("learnedIndicesList") || "[]");
-let learnedIndicesSet = new Set(learnedIndicesList); // Dùng Set để kiểm tra nhanh
+let learnedIndicesSet = new Set(learnedIndicesList);
+let availableIndices = [];
 let currentIndex = null;
-let currentPosition = -1; // Vị trí hiện tại trong danh sách learnedIndicesList
+let currentPosition = -1;
+let saveSessionTimeout = null;
 
 async function loadData() {
     try {
-        console.log("Đang tải output_deck.json...");
-        const res = await fetch("output_deck.json");
-        if (!res.ok) throw new Error(`Không thể tải JSON: ${res.status}`);
-        data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("Dữ liệu JSON không hợp lệ hoặc rỗng");
+        const cacheKey = "flashcards_data";
+        const cacheVersionKey = "flashcards_data_version";
+        const currentVersion = "1.0";
+        const cachedData = localStorage.getItem(cacheKey);
+        const cachedVersion = localStorage.getItem(cacheVersionKey);
+
+        if (cachedData && cachedVersion === currentVersion) {
+            data = JSON.parse(cachedData);
+        } else {
+            const res = await fetch("output_deck.json");
+            if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+            data = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(cacheVersionKey, currentVersion);
         }
-        console.log("Dữ liệu JSON đã tải:", data.length, "từ");
 
-        // Khởi tạo tiến trình
-        document.getElementById("totalCards").innerText = data.length;
+        availableIndices = Array.from({ length: data.length }, (_, i) => i).filter(i => !learnedIndicesSet.has(i));
+        DOM.totalCards.innerText = data.length;
 
-        // Nếu không có từ đã học, chọn từ ngẫu nhiên
         if (learnedIndicesList.length === 0) {
             currentIndex = getRandomUnseenIndex();
             learnedIndicesList.push(currentIndex);
             learnedIndicesSet.add(currentIndex);
             currentPosition = 0;
-            sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
+            debounceSaveSession();
             await showCard(false);
         } else {
-            // Hiển thị từ cuối cùng trong danh sách đã học
             currentPosition = learnedIndicesList.length - 1;
             currentIndex = learnedIndicesList[currentPosition];
-            if (currentIndex < 0 || currentIndex >= data.length) {
-                console.warn("currentIndex không hợp lệ, reset...");
-                learnedIndicesList = [];
-                learnedIndicesSet.clear();
-                currentIndex = getRandomUnseenIndex();
-                learnedIndicesList.push(currentIndex);
-                learnedIndicesSet.add(currentIndex);
-                currentPosition = 0;
-                sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
-            }
             await showCard(false);
         }
     } catch (e) {
-        console.error("Lỗi tải dữ liệu:", e);
-        document.body.innerHTML = "❌ Không thể tải file JSON. Vui lòng kiểm tra console.";
+        document.body.innerHTML = "❌ Cannot load JSON. Check console.";
     }
 }
 
@@ -57,124 +76,105 @@ function supabaseMediaURL(filename) {
 }
 
 function getRandomUnseenIndex() {
-    if (learnedIndicesSet.size >= data.length) {
-        console.log("Đã học hết từ, reset danh sách...");
-        alert("🎉 Bạn đã học hết flashcards trong phiên này!");
+    if (availableIndices.length === 0) {
+        alert("🎉 All flashcards reviewed!");
         learnedIndicesList = [];
         learnedIndicesSet.clear();
+        availableIndices = Array.from({ length: data.length }, (_, i) => i);
         currentPosition = -1;
-        sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
+        debounceSaveSession();
     }
-
-    let index;
-    do {
-        index = Math.floor(Math.random() * data.length);
-    } while (learnedIndicesSet.has(index));
-
-    console.log("Chọn từ mới với index:", index);
+    const randomIdx = Math.floor(Math.random() * availableIndices.length);
+    const index = availableIndices[randomIdx];
+    availableIndices.splice(randomIdx, 1);
     return index;
 }
 
 async function preloadImage(url) {
     try {
-        console.log("Đang tải hình ảnh:", url);
         const img = new Image();
         img.src = url;
         await new Promise((resolve, reject) => {
-            img.onload = () => {
-                console.log("Hình ảnh tải thành công");
-                resolve();
-            };
-            img.onerror = () => reject(new Error("Không thể tải hình ảnh"));
+            img.onload = resolve;
+            img.onerror = reject;
         });
-    } catch (e) {
-        console.error("Lỗi tải hình ảnh:", e);
-        document.getElementById("cardImage").alt = "Hình ảnh không khả dụng";
+        return true;
+    } catch {
+        return false;
     }
+}
+
+function debounceSaveSession() {
+    clearTimeout(saveSessionTimeout);
+    saveSessionTimeout = setTimeout(() => {
+        sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
+    }, 100);
 }
 
 async function showCard(addToList = true) {
-    if (currentIndex < 0 || currentIndex >= data.length) {
-        console.error("currentIndex không hợp lệ:", currentIndex);
-        return;
-    }
+    if (currentIndex < 0 || currentIndex >= data.length) return;
 
     reveal = false;
-    const backButton = document.querySelector('button[onclick="handleBack()"]');
-
-    // Nếu thêm vào danh sách, cập nhật learnedIndicesList và learnedIndicesSet
-    if (addToList) {
-        if (!learnedIndicesSet.has(currentIndex)) {
-            learnedIndicesList.push(currentIndex);
-            learnedIndicesSet.add(currentIndex);
-            currentPosition = learnedIndicesList.length - 1;
-            sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
-            console.log("Thêm từ mới vào lịch sử:", currentIndex, learnedIndicesList);
-        }
+    if (addToList && !learnedIndicesSet.has(currentIndex)) {
+        learnedIndicesList.push(currentIndex);
+        learnedIndicesSet.add(currentIndex);
+        const idx = availableIndices.indexOf(currentIndex);
+        if (idx !== -1) availableIndices.splice(idx, 1);
+        currentPosition = learnedIndicesList.length - 1;
+        debounceSaveSession();
     }
-
-    // Cập nhật trạng thái nút Back
-    if (backButton) {
-        backButton.disabled = currentPosition <= 0;
-    } else {
-        console.warn("Không tìm thấy nút Back");
-    }
+    if (DOM.backButton) DOM.backButton.disabled = currentPosition <= 0;
 
     const card = data[currentIndex];
-    console.log("Hiển thị từ:", card.word);
 
-    // Fade out
-    const cardElement = document.getElementById("card");
-    const fullDataElement = document.getElementById("fullData");
-    cardElement.style.opacity = "0";
-    fullDataElement.style.opacity = "0";
-
-    // Cập nhật nội dung
-    document.getElementById("hintDisplay").innerHTML = card.spelling_hint || "";
-    document.getElementById("defDisplay").innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "[...]") : "";
-    document.getElementById("hintInput").value = "";
-    document.getElementById("fullData").classList.add("hidden");
-
-    document.getElementById("audioWordSource").src = card.audio_word ? supabaseMediaURL(card.audio_word) : "";
-    document.getElementById("audioMeaningSource").src = card.audio_meaning ? supabaseMediaURL(card.audio_meaning) : "";
-    document.getElementById("audioExampleSource").src = card.audio_example ? supabaseMediaURL(card.audio_example) : "";
-
-    document.getElementById("audioWord").load();
-    document.getElementById("audioMeaning").load();
-    document.getElementById("audioExample").load();
-
+    const shimmerTimeout = new Promise(resolve => setTimeout(resolve, 200));
+    let imageLoaded = false;
     if (card.image) {
-        await preloadImage(supabaseMediaURL(card.image));
-        document.getElementById("cardImage").src = supabaseMediaURL(card.image);
+        imageLoaded = await Promise.all([
+            preloadImage(supabaseMediaURL(card.image)),
+            shimmerTimeout
+        ]).then(([loaded]) => loaded);
     } else {
-        document.getElementById("cardImage").src = "";
-        document.getElementById("cardImage").alt = "Không có hình ảnh";
+        await shimmerTimeout;
     }
 
-    // Cập nhật tiến trình
-    document.getElementById("currentCard").innerText = currentPosition + 1;
+    DOM.card.classList.remove("shimmer");
+    DOM.cardImage.classList.remove("hidden");
+    DOM.hintInput.classList.remove("hidden");
+    DOM.hintDisplay.classList.remove("shimmer");
+    DOM.defDisplay.classList.remove("shimmer");
 
-    // Fade in
-    cardElement.style.opacity = "1";
-    fullDataElement.style.opacity = "1";
+    DOM.hintDisplay.innerHTML = card.spelling_hint || "";
+    DOM.defDisplay.innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "[...]") : "";
+    DOM.hintInput.value = "";
+    DOM.fullData.classList.add("hidden");
+
+    DOM.cardImage.src = imageLoaded && card.image ? supabaseMediaURL(card.image) : "";
+    DOM.cardImage.alt = imageLoaded && card.image ? card.word : "";
+
+    DOM.audioWordSource.src = "";
+    DOM.audioMeaningSource.src = "";
+    DOM.audioExampleSource.src = "";
+
+    DOM.currentCard.innerText = currentPosition + 1;
 }
 
 function revealCard() {
-    if (!data[currentIndex]) {
-        console.error("Không có dữ liệu cho currentIndex:", currentIndex);
-        return;
-    }
-
     const card = data[currentIndex];
-    console.log("Reveal từ:", card.word);
-    document.getElementById("word").innerText = card.word || "";
-    document.getElementById("phonetic").innerText = card.phonetic || "";
-    document.getElementById("translation").innerHTML = card.translation || "";
-    document.getElementById("fullDefinition").innerHTML = card.html_full_meaning || "";
-    document.getElementById("defDisplay").innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "$1") : "";
-    document.getElementById("fullData").classList.remove("hidden");
+    DOM.word.innerText = card.word || "";
+    DOM.phonetic.innerText = card.phonetic || "";
+    DOM.translation.innerHTML = card.translation || "";
+    DOM.fullDefinition.innerHTML = card.html_full_meaning || "";
+    DOM.defDisplay.innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "$1") : "";
+    DOM.fullData.classList.remove("hidden");
 
-    document.getElementById("audioWord").play().catch((e) => console.warn("Lỗi phát audio:", e));
+    DOM.audioWordSource.src = card.audio_word ? supabaseMediaURL(card.audio_word) : "";
+    DOM.audioMeaningSource.src = card.audio_meaning ? supabaseMediaURL(card.audio_meaning) : "";
+    DOM.audioExampleSource.src = card.audio_example ? supabaseMediaURL(card.audio_example) : "";
+    DOM.audioWord.load();
+    DOM.audioMeaning.load();
+    DOM.audioExample.load();
+    DOM.audioWord.play().catch(e => console.warn("Audio error:", e));
 }
 
 function handleReveal() {
@@ -185,69 +185,49 @@ function handleReveal() {
 }
 
 function handleNext() {
-    console.log("Chuyển sang từ tiếp theo...");
-    // Kiểm tra nếu có từ tiếp theo trong learnedIndicesList
     if (currentPosition < learnedIndicesList.length - 1) {
         currentPosition++;
         currentIndex = learnedIndicesList[currentPosition];
-        console.log("Quay lại từ trong lịch sử:", currentIndex);
     } else {
-        // Chọn từ mới ngẫu nhiên
         currentIndex = getRandomUnseenIndex();
-        console.log("Chọn từ mới ngẫu nhiên:", currentIndex);
     }
-    document.getElementById("card").style.opacity = "0";
-    setTimeout(async () => {
-        await showCard(true);
-        document.getElementById("card").style.opacity = "1";
-    }, 300);
+
+    DOM.card.classList.add("shimmer");
+    DOM.cardImage.classList.add("hidden");
+    DOM.hintInput.classList.add("hidden");
+    DOM.hintDisplay.classList.add("shimmer");
+    DOM.defDisplay.classList.add("shimmer");
+    setTimeout(() => showCard(true), 150);
 }
 
 function handleBack() {
     if (currentPosition > 0) {
-        console.log("Quay lại từ trước đó...");
         currentPosition--;
         currentIndex = learnedIndicesList[currentPosition];
-        document.getElementById("card").style.opacity = "0";
-        setTimeout(async () => {
-            await showCard(false);
-            document.getElementById("card").style.opacity = "1";
-        }, 300);
-    } else {
-        console.log("Không có từ trước đó để quay lại");
+        DOM.card.classList.add("shimmer");
+        DOM.cardImage.classList.add("hidden");
+        DOM.hintInput.classList.add("hidden");
+        DOM.hintDisplay.classList.add("shimmer");
+        DOM.defDisplay.classList.add("shimmer");
+        setTimeout(() => showCard(false), 150);
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const hintInput = document.getElementById("hintInput");
-    const backButton = document.querySelector('button[onclick="handleBack()"]');
+    if (!DOM.hintInput) return;
+    if (DOM.backButton) DOM.backButton.disabled = true;
 
-    if (!hintInput) {
-        console.error("Không tìm thấy hintInput");
-        return;
-    }
-    if (!backButton) {
-        console.warn("Không tìm thấy nút Back");
-    } else {
-        backButton.disabled = true; // Ban đầu vô hiệu hóa nút Back
-    }
-
-    // Xử lý Enter trong ô nhập: Reveal / Next
-    hintInput.addEventListener("keydown", (e) => {
+    DOM.hintInput.addEventListener("keydown", e => {
         if (e.key === "Enter") {
-            const userInput = hintInput.value.trim().toLowerCase();
+            e.preventDefault();
+            const userInput = DOM.hintInput.value.trim().toLowerCase();
             const correctWord = data[currentIndex]?.word?.toLowerCase() || "";
             if (!reveal) {
-                // Cho phép reveal dù nhập đúng hay sai
                 if (userInput && userInput !== correctWord) {
-                    console.log("Nhập sai từ:", userInput);
-                    hintInput.classList.add("error");
-                    setTimeout(() => hintInput.classList.remove("error"), 500);
-                } else {
-                    console.log("Nhập đúng từ hoặc để trống:", userInput);
+                    DOM.hintInput.classList.add("error");
+                    setTimeout(() => DOM.hintInput.classList.remove("error"), 500);
                 }
                 reveal = true;
-
                 revealCard();
             } else {
                 handleNext();
@@ -255,28 +235,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Global Enter/Space/ArrowLeft/ArrowRight: nếu chưa focus vào ô nhập thì xử lý
-document.addEventListener("keydown", (e) => {
-    const isInputFocused = document.activeElement === hintInput;
-    if (e.key === "Enter") {
-        e.preventDefault();
-        if (!isInputFocused) {
-            hintInput.focus();
+    document.addEventListener("keydown", e => {
+        if (document.activeElement !== DOM.hintInput) {
+            if (e.key === "Enter" || e.key === "ArrowRight") {
+                e.preventDefault();
+                handleNext();
+                if (!/Mobi|Android/i.test(navigator.userAgent)) {
+                    DOM.hintInput.focus();
+                }
+            } else if (e.key === " ") {
+                e.preventDefault();
+                handleReveal();
+            } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                handleBack();
+            }
         }
-    } else if (!isInputFocused) {
-        if (e.key === "ArrowRight") {
-            e.preventDefault();
-            handleNext();
-        } else if (e.key === " ") {
-            e.preventDefault();
-            handleReveal();
-        } else if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            handleBack();
-        }
-    }
-});
+    });
 
-    console.log("Khởi động ứng dụng...");
     loadData();
 });

@@ -42,12 +42,35 @@ footer {
   text-align: center;
   width: 100%;
   max-width: 400px;
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, opacity 0.3s ease;
 }
-
 #card:hover {
   transform: scale(1.02);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+#card.fade-in {
+  opacity: 1;
+}
+#card.fade-out {
+  opacity: 0;
+}
+#card.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  color: transparent !important;
+}
+
+/* Hiệu ứng shimmer cho wrapper */
+#cardImageWrapper.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Ẩn ảnh bên trong khi wrapper có class shimmer */
+.hidden {
+  display: none; /* Ẩn hoàn toàn ảnh */
 }
 
 /* Điều chỉnh #fullData */
@@ -61,11 +84,28 @@ footer {
   border: 1px solid #ddd;
   width: 100%;
   max-width: 400px;
+  transition: opacity 0.3s ease;
+}
+#fullData.hidden {
+  opacity: 0;
+  visibility: hidden;
+  display: none; /* Giữ nguyên từ file gốc */
 }
 
-/* Ẩn fullData khi không cần thiết */
-.hidden {
-  display: none;
+/* Shimmer effect */
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  color: transparent !important; /* Ẩn nội dung văn bản khi shimmer */
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Hiển thị tiến trình */
@@ -92,23 +132,21 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease;
+  touch-action: manipulation; /* Cải thiện tương tác trên mobile */
 }
-
 button:hover {
   background-color: #0056b3;
 }
-
 button:active {
   background-color: #004085;
 }
-
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
 
-/* Cải thiện giao diện các phần tử khác */
+/* Kiểu cho hình ảnh */
 img {
   max-height: 120px;
   width: auto;
@@ -117,7 +155,33 @@ img {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: block;
 }
+img#cardImage {
+  max-width: 100%;
+  height: 120px; /* Giữ đồng bộ với file gốc */
+  object-fit: cover;
+}
 
+/* Kiểu cho hintDisplay và defDisplay */
+#hintDisplay {
+  font-size: 20px;
+  font-weight: bold;
+  color: #007BFF;
+  margin-bottom: 10px;
+  transition: opacity 0.2s ease-in-out;
+  min-height: 24px; /* Đảm bảo kích thước khi shimmer */
+}
+#defDisplay {
+  min-height: 20px; /* Đảm bảo kích thước khi shimmer */
+  margin: 10px 0;
+  font-size: 16px;
+}
+#hintDisplay.shimmer, #defDisplay.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Kiểu cho input */
 input {
   padding: 12px;
   width: 100%;
@@ -127,54 +191,40 @@ input {
   border: 2px solid #ccc;
   border-radius: 5px;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s ease;
 }
-
 input:focus {
   border-color: #007BFF;
 }
+input.error {
+  border-color: red;
+  animation: shake 0.2s;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
 
+/* Cải thiện giao diện các phần tử khác */
 .phonetic,
 .translation {
   font-style: italic;
   color: #777;
 }
-
 .definition {
   color: #333;
   font-weight: bold;
 }
-
-#hintDisplay {
-  font-size: 20px;
-  font-weight: bold;
-  color: #007BFF;
-  margin-bottom: 10px;
-  transition: opacity 0.3s ease-in-out;
-}
-
 .audio label {
   display: block;
   margin-top: 10px;
   font-weight: bold;
   color: #007BFF;
 }
-
 .audio audio {
   width: 100%;
   margin-top: 5px;
-}
-
-/* Hiệu ứng lỗi cho input */
-input.error {
-  border-color: red;
-  animation: shake 0.3s;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
 }
 
 /* Media queries cho thiết bị di động */
@@ -183,69 +233,55 @@ input.error {
     padding: 15px 10px;
     gap: 20px;
   }
-
   .container {
     flex-direction: column;
     align-items: center;
     margin: 10px;
     gap: 10px;
   }
-
   #card,
   #fullData {
     max-width: 100%;
     padding: 10px;
   }
-
   #card:hover {
     transform: none;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-
   header {
     padding: 10px;
   }
-
   header h1 {
     font-size: 1.5em;
   }
-
   header p {
     font-size: 0.9em;
   }
-
   footer {
     padding: 8px 15px;
     font-size: 12px;
   }
-
-  img {
+  img#cardImage {
     max-height: 100px;
   }
-
   input {
     font-size: 14px;
     padding: 10px;
   }
-
   #hintDisplay {
     font-size: 18px;
   }
-
   .audio audio {
     max-width: 100%;
   }
-
   .button-group {
-    flex-wrap: wrap; /* Cho phép nút xuống dòng nếu không đủ chỗ */
+    flex-wrap: wrap;
     gap: 8px;
   }
-
   button {
     padding: 8px 15px;
     font-size: 14px;
   }
-
   #progress {
     font-size: 12px;
   }
@@ -255,29 +291,23 @@ input.error {
   header h1 {
     font-size: 1.2em;
   }
-
   header p {
     font-size: 0.8em;
   }
-
   #card,
   #fullData {
     padding: 8px;
   }
-
   input {
     padding: 8px;
     font-size: 13px;
   }
-
-  img {
+  img#cardImage {
     max-height: 80px;
   }
-
   #hintDisplay {
     font-size: 16px;
   }
-
   button {
     padding: 7px 12px;
     font-size: 13px;
