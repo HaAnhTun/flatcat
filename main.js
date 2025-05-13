@@ -26,32 +26,93 @@ const DOM = {
 
 let data = [];
 let isRevealed = false;
-let learnedIndices = JSON.parse(sessionStorage.getItem("learnedIndices") || "[]");
-let learnedSet = new Set(learnedIndices);
+let learnedIndices = [];
+let learnedSet = new Set();
 let availableIndices = [];
 let currentIndex = null;
 let currentPosition = -1;
 let saveSessionTimeout = null;
 
+// IndexedDB setup
+const DB_NAME = "FlashcardsDB";
+const DB_VERSION = 1;
+const STORE_NAME = "flashcards";
+
+async function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(new Error("Failed to open IndexedDB"));
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            db.createObjectStore(STORE_NAME, { keyPath: "key" });
+        };
+    });
+}
+
+async function saveToIndexedDB(key, value) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const store = tx.objectStore(STORE_NAME);
+        store.put({ key, value });
+        await new Promise((resolve, reject) => {
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(new Error("Failed to save to IndexedDB"));
+        });
+    } catch (error) {
+        console.error("IndexedDB save error:", error);
+        throw error;
+    }
+}
+
+async function loadFromIndexedDB(key) {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(key);
+        return await new Promise((resolve, reject) => {
+            request.onsuccess = () => resolve(request.result?.value);
+            request.onerror = () => reject(new Error("Failed to load from IndexedDB"));
+        });
+    } catch (error) {
+        console.error("IndexedDB load error:", error);
+        return null;
+    }
+}
+
 async function loadData() {
     try {
         const cacheKey = "flashcards_data";
         const cacheVersion = "1.0";
-        const cachedData = localStorage.getItem(cacheKey);
-        const cachedVersion = localStorage.getItem(cacheVersion + "_version");
 
-        if (cachedData && cachedVersion === cacheVersion) {
-            data = JSON.parse(cachedData);
-        } else {
-            const response = await fetch("part2.json");
-            if (!response.ok) throw new Error(`Failed to fetch JSON: ${response.status}`);
-            data = await response.json();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-            localStorage.setItem(cacheVersion + "_version", cacheVersion);
+        // Try to load from memory first
+        if (data.length > 0) {
+            setupIndices();
+            return;
         }
 
-        availableIndices = Array.from({ length: data.length }, (_, i) => i).filter(i => !learnedSet.has(i));
+        // Try to load from IndexedDB
+        let cachedData = await loadFromIndexedDB(cacheKey);
+        if (cachedData && (await loadFromIndexedDB(cacheVersion + "_version")) === cacheVersion) {
+            data = cachedData;
+        } else {
+            // Fetch from server if not cached
+            const response = await fetch(supabaseMediaURL("data.json"));
+            if (!response.ok) throw new Error(`Failed to fetch JSON: ${response.status}`);
+            data = await response.json();
+            // Save to IndexedDB
+            await saveToIndexedDB(cacheKey, data);
+            await saveToIndexedDB(cacheVersion + "_version", cacheVersion);
+        }
+
+        setupIndices();
         DOM.totalCards.innerText = data.length;
+
+        // Load session state
+        learnedIndices = JSON.parse(sessionStorage.getItem("learnedIndices") || "[]");
+        learnedSet = new Set(learnedIndices);
 
         if (learnedIndices.length === 0) {
             currentIndex = getRandomIndex();
@@ -69,6 +130,10 @@ async function loadData() {
         document.body.innerHTML = "<p class='text-red-500 text-center'>Error loading flashcards. Please try again.</p>";
         console.error("Load error:", error);
     }
+}
+
+function setupIndices() {
+    availableIndices = Array.from({ length: data.length }, (_, i) => i).filter(i => !learnedSet.has(i));
 }
 
 function supabaseMediaURL(filename) {
@@ -108,7 +173,12 @@ async function preloadImage(url) {
 function saveSession() {
     clearTimeout(saveSessionTimeout);
     saveSessionTimeout = setTimeout(() => {
-        sessionStorage.setItem("learnedIndices", JSON.stringify(learnedIndices));
+        try {
+            sessionStorage.setItem("learnedIndices", JSON.stringify(learnedIndices));
+        } catch (error) {
+            console.error("Session storage error:", error);
+            alert("Session storage limit reached. Progress may not be saved.");
+        }
     }, 100);
 }
 
@@ -146,7 +216,6 @@ async function displayCard(addToList = true) {
     DOM.defDisplay.innerHTML = card["Explanation"] ? card["Explanation"].replace(/{{c1::(.*?)}}/g, "[...]") : "";
     DOM.hintInput.value = "";
 
-
     DOM.cardImage.src = imageLoaded ? supabaseMediaURL(card["IMG"]) : "";
     DOM.cardImage.alt = card["Keyword"] || "Flashcard image";
 
@@ -159,7 +228,7 @@ async function displayCard(addToList = true) {
 
 function revealCard() {
     const card = data[currentIndex];
-    console.log("Full Vietnamese content:", card["Full Vietnamese"]); // Debug
+    console.log("Full Vietnamese content:", card["Full Vietnamese"]);
 
     DOM.word.innerText = card["Keyword"] || "";
     DOM.phonetic.innerText = card["Transcription"] || "";
