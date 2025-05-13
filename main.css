@@ -1,315 +1,101 @@
-/* Đảm bảo trang có thể cuộn nếu nội dung dài */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f9f9f9;
-  margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+/* Include Tailwind CSS via CDN */
+@import "https://cdn.tailwindcss.com/tailwind.min.css";
 
-header {
-  background-color: #007BFF;
-  color: white;
-  padding: 15px;
-  text-align: center;
-}
-
-footer {
-  background-color: #f1f1f1;
-  text-align: center;
-  padding: 10px 20px;
-  color: #666;
-  font-size: 14px;
-  margin-top: auto;
-}
-
-.container {
-  display: flex;
-  gap: 15px;
-  margin: 15px;
-  width: 100%;
-  flex-wrap: wrap;
-  flex-grow: 1;
-}
-
-/* Điều chỉnh #card */
-#card {
-  background-color: #ffffff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  width: 100%;
-  max-width: 400px;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, opacity 0.3s ease;
-}
-#card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-#card.fade-in {
-  opacity: 1;
-}
-#card.fade-out {
-  opacity: 0;
-}
-#card.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  color: transparent !important;
-}
-
-/* Hiệu ứng shimmer cho wrapper */
-#cardImageWrapper.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Ẩn ảnh bên trong khi wrapper có class shimmer */
-.hidden {
-  display: none; /* Ẩn hoàn toàn ảnh */
-}
-
-/* Điều chỉnh #fullData */
-#fullData {
-  padding: 15px;
-  min-width: 0;
-  max-width: 100%;
-  overflow-y: auto;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  width: 100%;
-  max-width: 400px;
-  transition: opacity 0.3s ease;
-}
-#fullData.hidden {
-  opacity: 0;
-  visibility: hidden;
-  display: none; /* Giữ nguyên từ file gốc */
-}
-
-/* Shimmer effect */
 .shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  color: transparent !important; /* Ẩn nội dung văn bản khi shimmer */
+    animation: shimmer 0.5s infinite alternate;
+    background: linear-gradient(to right, #f0f0f0 4%, #e0e0e0 25%, #f0f0f0 36%);
+    background-size: 200% 100%;
 }
+body {
+    font-family: Arial, sans-serif;
+}
+
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
-/* Hiển thị tiến trình */
-#progress {
-  font-size: 14px;
-  color: #333;
-  margin-bottom: 10px;
-  font-weight: bold;
+.error {
+    border-color: #ef4444 !important;
+    animation: shake 0.3s;
 }
 
-/* Kiểu dáng cho nút bấm */
-.button-group {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 15px;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  touch-action: manipulation; /* Cải thiện tương tác trên mobile */
-}
-button:hover {
-  background-color: #0056b3;
-}
-button:active {
-  background-color: #004085;
-}
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-/* Kiểu cho hình ảnh */
-img {
-  max-height: 120px;
-  width: auto;
-  margin: 15px auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: block;
-}
-img#cardImage {
-  max-width: 100%;
-  height: 120px; /* Giữ đồng bộ với file gốc */
-  object-fit: cover;
-}
-
-/* Kiểu cho hintDisplay và defDisplay */
-#hintDisplay {
-  font-size: 20px;
-  font-weight: bold;
-  color: #007BFF;
-  margin-bottom: 10px;
-  transition: opacity 0.2s ease-in-out;
-  min-height: 24px; /* Đảm bảo kích thước khi shimmer */
-}
-#defDisplay {
-  min-height: 20px; /* Đảm bảo kích thước khi shimmer */
-  margin: 10px 0;
-  font-size: 16px;
-}
-#hintDisplay.shimmer, #defDisplay.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Kiểu cho input */
-input {
-  padding: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 16px;
-  margin: 20px 0 !important;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-input:focus {
-  border-color: #007BFF;
-}
-input.error {
-  border-color: red;
-  animation: shake 0.2s;
-}
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
-/* Cải thiện giao diện các phần tử khác */
-.phonetic,
-.translation {
-  font-style: italic;
-  color: #777;
-}
-.definition {
-  color: #333;
-  font-weight: bold;
-}
-.audio label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-  color: #007BFF;
-}
-.audio audio {
-  width: 100%;
-  margin-top: 5px;
+.hidden {
+    display: none !important;
 }
 
-/* Media queries cho thiết bị di động */
-@media (max-width: 768px) {
-  main {
-    padding: 15px 10px;
-    gap: 20px;
-  }
-  .container {
-    flex-direction: column;
-    align-items: center;
-    margin: 10px;
-    gap: 10px;
-  }
-  #card,
-  #fullData {
-    max-width: 100%;
-    padding: 10px;
-  }
-  #card:hover {
-    transform: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  header {
-    padding: 10px;
-  }
-  header h1 {
-    font-size: 1.5em;
-  }
-  header p {
-    font-size: 0.9em;
-  }
-  footer {
-    padding: 8px 15px;
-    font-size: 12px;
-  }
-  img#cardImage {
-    max-height: 100px;
-  }
-  input {
-    font-size: 14px;
-    padding: 10px;
-  }
-  #hintDisplay {
-    font-size: 18px;
-  }
-  .audio audio {
-    max-width: 100%;
-  }
-  .button-group {
+/* Ensure Full Vietnamese content renders correctly */
+#fullDefinition ul {
+    list-style-type: disc;
+    margin-left: 1.5rem;
+}
+
+#fullDefinition li {
+    margin-bottom: 0.5rem;
+}
+
+#fullDefinition b {
+    font-weight: 700;
+}
+
+#fullDefinition i {
+    font-style: italic;
+}
+
+#fullDefinition font[color="#cc0000"] {
+    color: #cc0000;
+}
+
+/* Container for card and fullData */
+.container {
+    display: flex;
+    align-items: stretch; /* Stretch children to match tallest height */
+    justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
-  }
-  button {
-    padding: 8px 15px;
-    font-size: 14px;
-  }
-  #progress {
-    font-size: 12px;
-  }
+    gap: 1.5rem;
 }
 
-@media (max-width: 480px) {
-  header h1 {
-    font-size: 1.2em;
-  }
-  header p {
-    font-size: 0.8em;
-  }
-  #card,
-  #fullData {
-    padding: 8px;
-  }
-  input {
-    padding: 8px;
-    font-size: 13px;
-  }
-  img#cardImage {
-    max-height: 80px;
-  }
-  #hintDisplay {
-    font-size: 16px;
-  }
-  button {
-    padding: 7px 12px;
-    font-size: 13px;
-  }
+/* Card and fullData styling */
+#card, #fullData {
+    width: 100%;
+    max-width: 500px; /* Consistent width */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure audio controls are full-width */
+audio {
+    width: 100%;
+}
+
+/* Desktop-specific styles */
+@media (min-width: 768px) {
+    .container {
+        flex-wrap: nowrap; /* Prevent wrapping on desktop */
+    }
+    #card, #fullData {
+        width: 500px; /* Fixed width for desktop */
+    }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+        padding-left: 1rem; /* Add padding to prevent touching screen edges */
+        padding-right: 1rem;
+    }
+    #fullData {
+        margin-left: 0; /* Remove margin on mobile */
+    }
+    #card, #fullData {
+        height: auto; /* Allow natural height on mobile */
+    }
 }

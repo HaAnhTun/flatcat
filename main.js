@@ -25,9 +25,9 @@ const DOM = {
 };
 
 let data = [];
-let reveal = false;
-let learnedIndicesList = JSON.parse(sessionStorage.getItem("learnedIndicesList") || "[]");
-let learnedIndicesSet = new Set(learnedIndicesList);
+let isRevealed = false;
+let learnedIndices = JSON.parse(sessionStorage.getItem("learnedIndices") || "[]");
+let learnedSet = new Set(learnedIndices);
 let availableIndices = [];
 let currentIndex = null;
 let currentPosition = -1;
@@ -36,61 +36,62 @@ let saveSessionTimeout = null;
 async function loadData() {
     try {
         const cacheKey = "flashcards_data";
-        const cacheVersionKey = "flashcards_data_version";
-        const currentVersion = "1.0";
+        const cacheVersion = "1.0";
         const cachedData = localStorage.getItem(cacheKey);
-        const cachedVersion = localStorage.getItem(cacheVersionKey);
+        const cachedVersion = localStorage.getItem(cacheVersion + "_version");
 
-        if (cachedData && cachedVersion === currentVersion) {
+        if (cachedData && cachedVersion === cacheVersion) {
             data = JSON.parse(cachedData);
         } else {
-            const res = await fetch("output_deck.json");
-            if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-            data = await res.json();
+            const response = await fetch("part2.json");
+            if (!response.ok) throw new Error(`Failed to fetch JSON: ${response.status}`);
+            data = await response.json();
             localStorage.setItem(cacheKey, JSON.stringify(data));
-            localStorage.setItem(cacheVersionKey, currentVersion);
+            localStorage.setItem(cacheVersion + "_version", cacheVersion);
         }
 
-        availableIndices = Array.from({ length: data.length }, (_, i) => i).filter(i => !learnedIndicesSet.has(i));
+        availableIndices = Array.from({ length: data.length }, (_, i) => i).filter(i => !learnedSet.has(i));
         DOM.totalCards.innerText = data.length;
 
-        if (learnedIndicesList.length === 0) {
-            currentIndex = getRandomUnseenIndex();
-            learnedIndicesList.push(currentIndex);
-            learnedIndicesSet.add(currentIndex);
+        if (learnedIndices.length === 0) {
+            currentIndex = getRandomIndex();
+            learnedIndices.push(currentIndex);
+            learnedSet.add(currentIndex);
             currentPosition = 0;
-            debounceSaveSession();
-            await showCard(false);
+            saveSession();
+            await displayCard(false);
         } else {
-            currentPosition = learnedIndicesList.length - 1;
-            currentIndex = learnedIndicesList[currentPosition];
-            await showCard(false);
+            currentPosition = learnedIndices.length - 1;
+            currentIndex = learnedIndices[currentPosition];
+            await displayCard(false);
         }
-    } catch (e) {
-        document.body.innerHTML = "❌ Cannot load JSON. Check console.";
+    } catch (error) {
+        document.body.innerHTML = "<p class='text-red-500 text-center'>Error loading flashcards. Please try again.</p>";
+        console.error("Load error:", error);
     }
 }
 
 function supabaseMediaURL(filename) {
-    return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${filename}`;
+    return filename ? `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${filename}` : "";
 }
 
-function getRandomUnseenIndex() {
+function getRandomIndex() {
     if (availableIndices.length === 0) {
-        alert("🎉 All flashcards reviewed!");
-        learnedIndicesList = [];
-        learnedIndicesSet.clear();
+        alert("All flashcards reviewed! Starting over.");
+        learnedIndices = [];
+        learnedSet.clear();
         availableIndices = Array.from({ length: data.length }, (_, i) => i);
         currentPosition = -1;
-        debounceSaveSession();
+        saveSession();
     }
-    const randomIdx = Math.floor(Math.random() * availableIndices.length);
-    const index = availableIndices[randomIdx];
-    availableIndices.splice(randomIdx, 1);
+    const idx = Math.floor(Math.random() * availableIndices.length);
+    const index = availableIndices[idx];
+    availableIndices.splice(idx, 1);
     return index;
 }
 
 async function preloadImage(url) {
+    if (!url) return false;
     try {
         const img = new Image();
         img.src = url;
@@ -104,53 +105,50 @@ async function preloadImage(url) {
     }
 }
 
-function debounceSaveSession() {
+function saveSession() {
     clearTimeout(saveSessionTimeout);
     saveSessionTimeout = setTimeout(() => {
-        sessionStorage.setItem("learnedIndicesList", JSON.stringify(learnedIndicesList));
+        sessionStorage.setItem("learnedIndices", JSON.stringify(learnedIndices));
     }, 100);
 }
 
-async function showCard(addToList = true) {
+async function displayCard(addToList = true) {
     if (currentIndex < 0 || currentIndex >= data.length) return;
 
-    reveal = false;
-    if (addToList && !learnedIndicesSet.has(currentIndex)) {
-        learnedIndicesList.push(currentIndex);
-        learnedIndicesSet.add(currentIndex);
+    isRevealed = false;
+    if (addToList && !learnedSet.has(currentIndex)) {
+        learnedIndices.push(currentIndex);
+        learnedSet.add(currentIndex);
         const idx = availableIndices.indexOf(currentIndex);
         if (idx !== -1) availableIndices.splice(idx, 1);
-        currentPosition = learnedIndicesList.length - 1;
-        debounceSaveSession();
+        currentPosition = learnedIndices.length - 1;
+        saveSession();
     }
-    if (DOM.backButton) DOM.backButton.disabled = currentPosition <= 0;
 
+    DOM.backButton.disabled = currentPosition <= 0;
     const card = data[currentIndex];
 
-    const shimmerTimeout = new Promise(resolve => setTimeout(resolve, 200));
-    let imageLoaded = false;
-    if (card.image) {
-        imageLoaded = await Promise.all([
-            preloadImage(supabaseMediaURL(card.image)),
-            shimmerTimeout
-        ]).then(([loaded]) => loaded);
-    } else {
-        await shimmerTimeout;
-    }
-
-    DOM.card.classList.remove("shimmer");
-    DOM.cardImage.classList.remove("hidden");
-    DOM.hintInput.classList.remove("hidden");
-    DOM.hintDisplay.classList.remove("shimmer");
-    DOM.defDisplay.classList.remove("shimmer");
-
-    DOM.hintDisplay.innerHTML = card.spelling_hint || "";
-    DOM.defDisplay.innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "[...]") : "";
-    DOM.hintInput.value = "";
+    // Apply shimmer effect during load
+    DOM.card.classList.add("shimmer");
+    [...DOM.card.children].forEach(el => el.classList.add("hidden"));
     DOM.fullData.classList.add("hidden");
+    const shimmerTimeout = new Promise(resolve => setTimeout(resolve, 200));
+    const imageLoaded = await Promise.all([
+        preloadImage(supabaseMediaURL(card["IMG"])),
+        shimmerTimeout
+    ]).then(([loaded]) => loaded);
 
-    DOM.cardImage.src = imageLoaded && card.image ? supabaseMediaURL(card.image) : "";
-    DOM.cardImage.alt = imageLoaded && card.image ? card.word : "";
+    // Update DOM
+    DOM.card.classList.remove("shimmer");
+    Array.from(DOM.card.children).forEach(el => el.classList.remove("hidden"));
+
+    DOM.hintDisplay.innerHTML = card["Suggestion"] || "";
+    DOM.defDisplay.innerHTML = card["Explanation"] ? card["Explanation"].replace(/{{c1::(.*?)}}/g, "[...]") : "";
+    DOM.hintInput.value = "";
+
+
+    DOM.cardImage.src = imageLoaded ? supabaseMediaURL(card["IMG"]) : "";
+    DOM.cardImage.alt = card["Keyword"] || "Flashcard image";
 
     DOM.audioWordSource.src = "";
     DOM.audioMeaningSource.src = "";
@@ -161,73 +159,68 @@ async function showCard(addToList = true) {
 
 function revealCard() {
     const card = data[currentIndex];
-    DOM.word.innerText = card.word || "";
-    DOM.phonetic.innerText = card.phonetic || "";
-    DOM.translation.innerHTML = card.translation || "";
-    DOM.fullDefinition.innerHTML = card.html_full_meaning || "";
-    DOM.defDisplay.innerHTML = card.definition ? card.definition.replace(/{{c1::(.*?)}}/g, "$1") : "";
+    console.log("Full Vietnamese content:", card["Full Vietnamese"]); // Debug
+
+    DOM.word.innerText = card["Keyword"] || "";
+    DOM.phonetic.innerText = card["Transcription"] || "";
+    DOM.translation.innerHTML = card["Short Vietnamese"] || "";
+    DOM.fullDefinition.innerHTML = card["Full Vietnamese"] || "No full definition available.";
+    DOM.defDisplay.innerHTML = card["Explanation"] ? card["Explanation"].replace(/{{c1::(.*?)}}/g, "$1") : "";
     DOM.fullData.classList.remove("hidden");
 
-    DOM.audioWordSource.src = card.audio_word ? supabaseMediaURL(card.audio_word) : "";
-    DOM.audioMeaningSource.src = card.audio_meaning ? supabaseMediaURL(card.audio_meaning) : "";
-    DOM.audioExampleSource.src = card.audio_example ? supabaseMediaURL(card.audio_example) : "";
+    DOM.audioWordSource.src = supabaseMediaURL(card["Sound_audio"]);
+    DOM.audioMeaningSource.src = supabaseMediaURL(card["Meaning_audio"]);
+    DOM.audioExampleSource.src = supabaseMediaURL(card["Example_audio"]);
     DOM.audioWord.load();
     DOM.audioMeaning.load();
     DOM.audioExample.load();
-    DOM.audioWord.play().catch(e => console.warn("Audio error:", e));
+    DOM.audioWord.play().catch(e => console.warn("Audio play error:", e));
 }
 
 function handleReveal() {
-    if (!reveal) {
-        reveal = true;
+    if (!isRevealed) {
+        isRevealed = true;
         revealCard();
     }
 }
 
 function handleNext() {
-    if (currentPosition < learnedIndicesList.length - 1) {
+    if (currentPosition < learnedIndices.length - 1) {
         currentPosition++;
-        currentIndex = learnedIndicesList[currentPosition];
+        currentIndex = learnedIndices[currentPosition];
     } else {
-        currentIndex = getRandomUnseenIndex();
+        currentIndex = getRandomIndex();
     }
-
-    DOM.card.classList.add("shimmer");
-    DOM.cardImage.classList.add("hidden");
-    DOM.hintInput.classList.add("hidden");
-    DOM.hintDisplay.classList.add("shimmer");
-    DOM.defDisplay.classList.add("shimmer");
-    setTimeout(() => showCard(true), 150);
+    displayCard(true);
 }
 
 function handleBack() {
     if (currentPosition > 0) {
         currentPosition--;
-        currentIndex = learnedIndicesList[currentPosition];
-        DOM.card.classList.add("shimmer");
-        DOM.cardImage.classList.add("hidden");
-        DOM.hintInput.classList.add("hidden");
-        DOM.hintDisplay.classList.add("shimmer");
-        DOM.defDisplay.classList.add("shimmer");
-        setTimeout(() => showCard(false), 150);
+        currentIndex = learnedIndices[currentPosition];
+        displayCard(false);
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (!DOM.hintInput) return;
-    if (DOM.backButton) DOM.backButton.disabled = true;
+    if (!DOM.hintInput) {
+        console.error("Hint input not found");
+        return;
+    }
+
+    DOM.backButton.disabled = true;
 
     DOM.hintInput.addEventListener("keydown", e => {
         if (e.key === "Enter") {
             e.preventDefault();
-            const userInput = DOM.hintInput.value.trim().toLowerCase();
-            const correctWord = data[currentIndex]?.word?.toLowerCase() || "";
-            if (!reveal) {
-                if (userInput && userInput !== correctWord) {
+            const input = DOM.hintInput.value.trim().toLowerCase();
+            const correct = data[currentIndex]["Keyword"]?.toLowerCase() || "";
+            if (!isRevealed) {
+                if (input && input !== correct) {
                     DOM.hintInput.classList.add("error");
                     setTimeout(() => DOM.hintInput.classList.remove("error"), 500);
                 }
-                reveal = true;
+                isRevealed = true;
                 revealCard();
             } else {
                 handleNext();
@@ -240,9 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (e.key === "Enter" || e.key === "ArrowRight") {
                 e.preventDefault();
                 handleNext();
-                if (!/Mobi|Android/i.test(navigator.userAgent)) {
-                    DOM.hintInput.focus();
-                }
+                if (!/Mobi|Android/i.test(navigator.userAgent)) DOM.hintInput.focus();
             } else if (e.key === " ") {
                 e.preventDefault();
                 handleReveal();

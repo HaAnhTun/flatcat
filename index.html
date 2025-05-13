@@ -2,69 +2,82 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>FlatCat - Vũ's Flash Card App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="main.css">
-  <link rel="icon" href="flatcat.png" type="image/png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlatCat Flash Card</title>
+  <link rel="stylesheet" href="main.css" />
+  <link rel="icon" href="flatcat.png" type="image/png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="main.js" defer></script>
 </head>
 
-<body>
-
-  <header>
-    <h1>FlatCat Flash Card</h1>
+<body class="bg-gray-100 flex flex-col min-h-screen font-sans">
+  <header class="p-4 text-center">
+    <h1 class="text-2xl font-bold">FlatCat</h1>
     <p>Practice your vocabulary</p>
   </header>
 
-  <!-- Main content -->
-  <main style="padding: 30px 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;">
-    <div id="card">
-      <div id="progress">Card <span id="currentCard">1</span>/<span id="totalCards">0</span></div>
-      <div id="hintDisplay" class="spelling_hint"></div>
-      <div class="definition" id="defDisplay"></div>
-        <img id="cardImage" src="" alt="Image">
-        <input type="text" id="hintInput" placeholder="Type the word and press Enter...">
-      <div class="button-group">
-        <button onclick="handleReveal()">Reveal</button>
-        <button onclick="handleNext()">Next</button>
-        <button onclick="handleBack()">Back</button>
+  <main class="flex-grow flex items-center justify-center">
+    <div class="container flex items-start justify-center">
+      <div id="card" class="bg-white p-6 rounded-lg shadow-lg flex flex-col w-full max-w-md">
+        <div class="flex justify-between w-full mb-4">
+          <span id="currentCard" class="text-lg font-semibold">1</span>
+          <span class="text-lg font-semibold">/</span>
+          <span id="totalCards" class="text-lg font-semibold">0</span>
+        </div>
+        <div id="hintDisplay" class="text-xl  font-bold text-blue-600 mb-4"></div>
+        <div id="defDisplay" class="text-base mb-4"></div>
+        <img id="cardImage" class="w-full h-64 object-contain rounded-md mb-4" src="" alt="Flashcard image" />
+        <input id="hintInput" class="w-full p-2 border rounded mb-4" type="text" placeholder="Enter your guess" />
+
+
+        <div class="flex justify-center space-x-4 p-4">
+          <button onclick="handleReveal()"
+            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Reveal</button>
+          <button onclick="handleNext()"
+            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Next</button>
+          <button onclick="handleBack()"
+            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Back</button>
+        </div>
       </div>
-    </div>
 
-    <div class="full-data hidden" id="fullData">
-      <h2 id="word"></h2>
-      <div class="phonetic" id="phonetic"></div>
-      <div class="translation" id="translation"></div>
-      <div id="fullDefinition"></div>
-      <div class="audio">
-        <label for="audioWord">Audio (Word)</label>
-        <audio id="audioWord" controls>
-          <source id="audioWordSource" src="" type="audio/mp3">
-          Your browser does not support the audio element.
-        </audio>
+      <div id="fullData" class="hidden bg-white p-6 rounded-lg shadow-lg ml-6 w-full max-w-md">
+        <h2 id="word" class="text-xl font-bold mb-2"></h2>
+        <p id="phonetic" class="text-gray-600 mb-2"></p>
+        <p id="translation" class="text-base mb-4"></p>
+        <div id="fullDefinition" class="text-base mb-4"></div>
 
-        <label for="audioMeaning">Audio (Meaning)</label>
-        <audio id="audioMeaning" controls>
-          <source id="audioMeaningSource" src="" type="audio/mp3">
-          Your browser does not support the audio element.
-        </audio>
+        <div class="mb-4">
+          <p class="font-semibold">Audio (Word)</p>
+          <audio id="audioWord" controls class="w-full">
+            <source id="audioWordSource" src="" type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
 
-        <label for="audioExample">Audio (Example)</label>
-        <audio id="audioExample" controls>
-          <source id="audioExampleSource" src="" type="audio/mp3">
-          Your browser does not support the audio element.
-        </audio>
+        <div class="mb-4">
+          <p class="font-semibold">Audio (Meaning)</p>
+          <audio id="audioMeaning" controls class="w-full">
+            <source id="audioMeaningSource" src="" type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+
+        <div>
+          <p class="font-semibold">Audio (Example)</p>
+          <audio id="audioExample" controls class="w-full">
+            <source id="audioExampleSource" src="" type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        </div>
       </div>
     </div>
   </main>
 
-  <footer>
+  <footer class="text-center p-4">
     <p>© 2025 <strong>FlatCat</strong> by Vũ. All rights reserved.</p>
     <p>Inspired by <strong>Anki</strong></p>
   </footer>
-
-  <script src="main.js"></script>
-
 </body>
 
 </html>
